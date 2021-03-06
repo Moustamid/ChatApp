@@ -10,7 +10,7 @@ const chalk = require('chalk');
 
 const app = express();
 const server = http.createServer(app);
-//- our server now support web socket.io
+//*  our server now support web socket.io  :
 const io = socketio(server);
 
 // SECTION:
@@ -21,10 +21,21 @@ const publicDirectoryPath = path.join(__dirname, '../public');
 
 app.use(express.static(publicDirectoryPath));
 
-// SECTION:
+// SECTION: socket.io :
 
-io.on('connection', () => {
-  console.log(chalk.hex('#8c14fc').bold(` New WebSocket connection`));
+io.on('connection', (socket) => {
+  console.log(chalk.hex('#f7ca18').bold(`New WebSocket connection 🛸 ...  `));
+
+  socket.emit('message', 'Welcome');
+  socket.broadcast.emit('message', 'A new user has joined');
+
+  socket.on('sendMessage', (message) => {
+    io.emit('message', message);
+  });
+
+  socket.on('disconnect', () => {
+    io.emit('message', 'A user has left');
+  });
 });
 
 // SECTION:
