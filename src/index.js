@@ -4,6 +4,7 @@ const path = require('path');
 const express = require('express');
 const http = require('http');
 const socketio = require('socket.io');
+const Filter = require('bad-words');
 const chalk = require('chalk');
 
 // SECTION:
@@ -24,17 +25,40 @@ app.use(express.static(publicDirectoryPath));
 // SECTION: socket.io :
 
 io.on('connection', (socket) => {
-  console.log(chalk.hex('#f7ca18').bold(`New WebSocket connection 🛸 ...  `));
+  console.log(chalk.hex('#4d05e8').bold(`New WebSocket connection 🛸 ...  `));
 
+  //* message event :
   socket.emit('message', 'Welcome');
+
+  //* broadcast event :
   socket.broadcast.emit('message', 'A new user has joined');
 
-  socket.on('sendMessage', (message) => {
+  //* sendMessage event :
+  socket.on('sendMessage', (message, callback) => {
+    //.Checking for bad-worlds :
+    const filter = new Filter();
+
+    if (filter.isProfane(message)) {
+      return callback('Profanity is not allowed');
+    }
+
     io.emit('message', message);
+    callback();
   });
 
+  //* disconnect event :
   socket.on('disconnect', () => {
     io.emit('message', 'A user has left');
+  });
+
+  //* sendLocation event :
+  socket.on('sendLocation', (coords, callback) => {
+    io.emit(
+      'message',
+      `https://google.com/maps?q=${coords.latitude},${coords.longitude}`
+    );
+
+    callback();
   });
 });
 
